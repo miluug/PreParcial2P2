@@ -1,17 +1,47 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
-        }
+    public static void main(String[] args) {
+
+        // ===== SINGLETON =====
+        SonicWave app = SonicWave.getInstance();
+
+        Usuario premium = new Usuario("U1", "Ana", Usuario.TipoSuscripcion.PREMIUM);
+        Usuario free    = new Usuario("U2", "Luis", Usuario.TipoSuscripcion.FREE);
+
+        app.iniciarSesion(premium);
+
+
+        // ===== FACTORY =====
+        ContenidoFactory cancionF = new CancionFactory();
+        ContenidoFactory libroF   = new AudioLibroFactory();
+
+        Contenido c1 = cancionF.crearContenido("C1", "Song", 200, "Artista", "Album");
+        Contenido c2 = libroF.crearContenido("A1", "Libro", 1000, "Autor", "Narrador");
+
+
+        // ===== COMPOSITE =====
+        Playlist lista = new Playlist("Mi lista");
+        lista.agregar(new ContenidoIndividual(c1));
+        lista.agregar(new ContenidoIndividual(c2));
+
+        System.out.println("Duración total: " + lista.getDuracion());
+
+
+        // ===== DECORATOR =====
+        IReproductor r = new ReverbEfecto(new ReproductorBase());
+
+
+        // ===== PROXY =====
+        IReproductor proxy = new ProxyReproductor(r, free);
+
+
+        // ===== PRUEBA =====
+        System.out.println("\nIntento usuario FREE:");
+        proxy.reproducir(c2); // audiolibro → bloqueado
+
+        System.out.println("\nReproduce canción:");
+        proxy.reproducir(c1);
     }
 }
