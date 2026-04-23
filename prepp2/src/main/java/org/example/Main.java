@@ -1,47 +1,66 @@
 package org.example;
+import org.example.*;
 
 public class Main {
 
     public static void main(String[] args) {
 
         // ===== SINGLETON =====
-        SonicWave app = SonicWave.getInstance();
+        SonicWave global = SonicWave.getInstance();
 
-        Usuario premium = new Usuario("U1", "Ana", Usuario.TipoSuscripcion.PREMIUM);
-        Usuario free    = new Usuario("U2", "Luis", Usuario.TipoSuscripcion.FREE);
+        Usuario carolina = new Usuario("U001", "Carolina", Usuario.TipoSuscripcion.PREMIUM);
+        Usuario juan     = new Usuario("U002", "Juan",     Usuario.TipoSuscripcion.FREE);
 
-        app.iniciarSesion(premium);
+        global.iniciarSesion(carolina);
 
+        // ===== FACTORY METHOD =====
+        ContenidoFactory cancionF    = new CancionFactory();
+        ContenidoFactory podcastF    = new PodcastFactory();
+        ContenidoFactory audiolibroF = new AudioLibroFactory();
 
-        // ===== FACTORY =====
-        ContenidoFactory cancionF = new CancionFactory();
-        ContenidoFactory libroF   = new AudioLibroFactory();
-
-        Contenido c1 = cancionF.crearContenido("C1", "Song", 200, "Artista", "Album");
-        Contenido c2 = libroF.crearContenido("A1", "Libro", 1000, "Autor", "Narrador");
-
+        Contenido c1 = cancionF.crearContenido("C01", "Feeling Good",    230, "Nina Simone", "I Put a Spell");
+        Contenido c2 = cancionF.crearContenido("C02", "Hotel California", 391, "Eagles",      "Hotel California");
+        Contenido c3 = podcastF.crearContenido("P01", "El Método Lenny",  1800, "Lenny",      "45");
+        Contenido c4 = audiolibroF.crearContenido("A01", "Cien Años de Soledad", 75000, "García Márquez", "J. Serrat");
 
         // ===== COMPOSITE =====
-        Playlist lista = new Playlist("Mi lista");
-        lista.agregar(new ContenidoIndividual(c1));
-        lista.agregar(new ContenidoIndividual(c2));
+        Playlist favoritas = new Playlist("Favoritas");
+        favoritas.agregar(new ContenidoIndividual(c1));
+        favoritas.agregar(new ContenidoIndividual(c2));
 
-        System.out.println("Duración total: " + lista.getDuracion());
+        Playlist aprender = new Playlist("Aprendizaje");
+        aprender.agregar(new ContenidoIndividual(c3));
+        aprender.agregar(new ContenidoIndividual(c4));
 
+        Playlist miSemana = new Playlist("Mi semana");
+        miSemana.agregar(favoritas);   // playlist anidada
+        miSemana.agregar(aprender);    // playlist anidada
 
-        // ===== DECORATOR =====
-        IReproductor r = new ReverbEfecto(new ReproductorBase());
+        miSemana.mostrar("");
+        System.out.println("Duración total: " + miSemana.getDuracion() + " segundos");
 
+        // ===== DECORATOR + PROXY =====
+        IReproductor paraCarolina = construirReproductor(carolina, true, true, false);
+        IReproductor paraJuan     = construirReproductor(juan,     true, false, true);
 
-        // ===== PROXY =====
-        IReproductor proxy = new ProxyReproductor(r, free);
+        System.out.println("\n--- Carolina (PREMIUM) reproduce un audiolibro ---");
+        paraCarolina.reproducir(c4);
 
+        System.out.println("\n--- Juan (FREE) intenta un audiolibro (bloqueado) ---");
+        paraJuan.reproducir(c4);
 
-        // ===== PRUEBA =====
-        System.out.println("\nIntento usuario FREE:");
-        proxy.reproducir(c2); // audiolibro → bloqueado
+        System.out.println("\n--- Juan (FREE) escucha una canción (con anuncio) ---");
+        paraJuan.reproducir(c1);
+    }
 
-        System.out.println("\nReproduce canción:");
-        proxy.reproducir(c1);
+    static IReproductor construirReproductor(Usuario u, boolean eq, boolean reverb, boolean d8) {
+
+        IReproductor r = new ReproductorBase();
+
+        if (eq)     r = new EqEfecto(r);
+        if (reverb) r = new ReverbEfecto(r);
+        if (d8)     r = new Efecto8d(r);
+
+        return new ProxyReproductor(r, u);
     }
 }
